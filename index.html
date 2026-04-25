@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2d5a27">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css">
+  <title>Assistant's Shop</title>
+</head>
+<body class="theme-light">
+  <!-- Scene latar belakang -->
+  <div class="scene" id="scene">
+    <div class="scene-layer light-scene">
+      <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="skyLight" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4facfe"/>
+            <stop offset="100%" stop-color="#e0f6ff"/>
+          </linearGradient>
+          <linearGradient id="mountGrad1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3b7a33"/>
+            <stop offset="100%" stop-color="#1b4d1b"/>
+          </linearGradient>
+          <linearGradient id="mountGrad2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4c8c3c"/>
+            <stop offset="100%" stop-color="#2d5a27"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="600" fill="url(#skyLight)"/>
+        <circle cx="680" cy="80" r="50" fill="#FFD700" opacity="0.9"/>
+        <circle cx="680" cy="80" r="70" fill="#FFD700" opacity="0.2"/>
+        <polygon points="0,600 150,300 300,600" fill="url(#mountGrad2)"/>
+        <polygon points="200,600 420,200 600,600" fill="url(#mountGrad1)"/>
+        <polygon points="520,600 700,350 800,600" fill="url(#mountGrad2)"/>
+        <ellipse cx="120" cy="150" rx="60" ry="20" fill="white" opacity="0.7"/>
+        <ellipse cx="400" cy="100" rx="80" ry="25" fill="white" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="scene-layer dark-scene" style="display:none">
+      <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="skyDark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0a0a2e"/>
+            <stop offset="100%" stop-color="#1a1a3e"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="600" fill="url(#skyDark)"/>
+        <circle cx="120" cy="80" r="30" fill="#f0e68c" opacity="0.9"/>
+        <circle cx="120" cy="80" r="40" fill="#f0e68c" opacity="0.2"/>
+        <circle cx="300" cy="50" r="1.5" fill="white"/>
+        <circle cx="500" cy="70" r="2" fill="white"/>
+        <circle cx="700" cy="40" r="1" fill="white"/>
+        <circle cx="600" cy="120" r="1.5" fill="white"/>
+        <circle cx="200" cy="130" r="1" fill="white"/>
+        <rect x="50" y="300" width="80" height="300" fill="#11111b"/>
+        <rect x="150" y="250" width="100" height="350" fill="#0d0d14"/>
+        <rect x="280" y="320" width="70" height="280" fill="#11111b"/>
+        <rect x="380" y="200" width="90" height="400" fill="#0d0d14"/>
+        <rect x="500" y="280" width="80" height="320" fill="#11111b"/>
+        <rect x="620" y="240" width="100" height="360" fill="#0d0d14"/>
+        <rect x="750" y="310" width="50" height="290" fill="#11111b"/>
+        <rect x="170" y="270" width="10" height="10" fill="#ffdd55" opacity="0.8"/>
+        <rect x="200" y="300" width="10" height="10" fill="#ffdd55" opacity="0.6"/>
+        <rect x="400" y="230" width="10" height="10" fill="#ffdd55" opacity="0.9"/>
+        <rect x="430" y="280" width="10" height="10" fill="#ffdd55" opacity="0.7"/>
+        <rect x="640" y="270" width="10" height="10" fill="#ffdd55" opacity="0.8"/>
+        <rect x="680" y="310" width="10" height="10" fill="#ffdd55" opacity="0.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <header class="app-header">
+      <h1 class="app-title">🛒 Assistant's Shop</h1>
+      <div class="header-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Ganti tema">🌓</button>
+        <button id="backupBtn" class="icon-btn" title="Backup Data">💾</button>
+        <button id="restoreBtn" class="icon-btn" title="Pulihkan Data">📂</button>
+      </div>
+    </header>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="search-wrapper">
+          <input type="text" id="searchInput" placeholder="Cari barang..." autocomplete="off">
+        </div>
+        <button id="clearFilter" class="btn-clear">✕ Hapus Filter</button>
+      </div>
+      <div class="filter-row">
+        <select id="categoryFilter">
+          <option value="">Semua Kategori</option>
+        </select>
+        <input type="number" id="priceMin" placeholder="Harga min" min="0">
+        <input type="number" id="priceMax" placeholder="Harga max" min="0">
+        <label class="eceran-filter">
+          <input type="checkbox" id="eceranOnly"> Hanya Eceran
+        </label>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <!-- Sidebar Kategori (Desktop) -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h3>Kategori</h3>
+        </div>
+        <ul id="categoryList" class="category-list"></ul>
+        <div class="add-category-group">
+          <input type="text" id="newCategoryInput" placeholder="Kategori baru">
+          <button id="addCategoryBtn" class="btn-small">+ Tambah</button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-toolbar">
+          <button id="addItemBtn" class="btn-primary">＋ Tambah Barang</button>
+          <span class="item-count" id="itemCount"></span>
+        </div>
+        <div id="itemsContainer" class="items-grid">
+          <!-- dirender oleh JS -->
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Barang -->
+  <div id="itemModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modalTitle">Tambah Barang</h2>
+      <form id="itemForm">
+        <input type="hidden" id="itemId">
+        <div class="form-group">
+          <label for="itemName">Nama Barang</label>
+          <input type="text" id="itemName" required>
+        </div>
+        <div class="form-group">
+          <label for="itemCategory">Kategori</label>
+          <select id="itemCategory" required></select>
+        </div>
+        <div class="form-group">
+          <label for="itemPrice">Harga (Rp)</label>
+          <input type="number" id="itemPrice" required min="0">
+        </div>
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="itemIsEceran">
+          <label for="itemIsEceran">Tersedia Eceran</label>
+        </div>
+        <div id="eceranPriceGroup" class="form-group" style="display:none">
+          <label for="itemEceranPrice">Harga Eceran (Rp)</label>
+          <input type="number" id="itemEceranPrice" min="0">
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn-primary">Simpan</button>
+          <button type="button" class="btn-danger" id="deleteItemBtn" style="display:none">Hapus</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
