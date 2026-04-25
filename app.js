@@ -31,27 +31,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const eceranPriceGroup = document.getElementById('eceranPriceGroup');
   const deleteItemBtn = document.getElementById('deleteItemBtn');
   const closeModalBtn = document.querySelector('.close');
+  const itemCountSpan = document.getElementById('itemCount');
 
   // === Load data ===
   function loadData() {
-    const saved = localStorage.getItem('shopData');
-    if (saved) {
-      items = JSON.parse(saved);
-    } else {
-      // Data default
-      items = [
-        { id: 1, name: 'Beras', category: 'Sembako', price: 12000, isEceran: false, eceranPrice: 0 },
-        { id: 2, name: 'Minyak Goreng', category: 'Sembako', price: 15000, isEceran: true, eceranPrice: 16000 },
-        { id: 3, name: 'Sabun Mandi', category: 'Kebersihan', price: 3500, isEceran: false, eceranPrice: 0 },
-        { id: 4, name: 'Shampoo', category: 'Kebersihan', price: 12000, isEceran: true, eceranPrice: 13000 },
-        { id: 5, name: 'Rokok', category: 'Lainnya', price: 20000, isEceran: true, eceranPrice: 22000 }
-      ];
-      saveData();
+    try {
+      const saved = localStorage.getItem('shopData');
+      if (saved) {
+        items = JSON.parse(saved);
+      } else {
+        items = [
+          { id: 1, name: 'Beras', category: 'Sembako', price: 12000, isEceran: false, eceranPrice: 0 },
+          { id: 2, name: 'Minyak Goreng', category: 'Sembako', price: 15000, isEceran: true, eceranPrice: 16000 },
+          { id: 3, name: 'Sabun Mandi', category: 'Kebersihan', price: 3500, isEceran: false, eceranPrice: 0 },
+          { id: 4, name: 'Shampoo', category: 'Kebersihan', price: 12000, isEceran: true, eceranPrice: 13000 },
+          { id: 5, name: 'Rokok', category: 'Lainnya', price: 20000, isEceran: true, eceranPrice: 22000 }
+        ];
+        saveData();
+      }
+    } catch (e) {
+      console.error('Gagal memuat data:', e);
+      items = [];
     }
   }
 
   function saveData() {
-    localStorage.setItem('shopData', JSON.stringify(items));
+    try {
+      localStorage.setItem('shopData', JSON.stringify(items));
+    } catch (e) {
+      alert('Gagal menyimpan data: penyimpanan browser penuh atau tidak diizinkan.');
+    }
   }
 
   function generateId() {
@@ -66,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // === Render ===
   function renderCategories() {
     const cats = getCategories();
+    // Update dropdown filter
     categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
     cats.forEach(cat => {
       const opt = document.createElement('option');
@@ -75,30 +85,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Render list kategori di sidebar
-    categoryList.innerHTML = '';
-    cats.forEach(cat => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${cat}</span> <button class="btn-small del-cat" data-cat="${cat}">×</button>`;
-      li.querySelector('span').addEventListener('click', () => {
-        categoryFilter.value = cat;
-        applyFilters();
+    if (categoryList) {
+      categoryList.innerHTML = '';
+      cats.forEach(cat => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${cat}</span> <button class="del-cat" data-cat="${cat}">×</button>`;
+        li.querySelector('span').addEventListener('click', () => {
+          categoryFilter.value = cat;
+          applyFilters();
+        });
+        li.querySelector('.del-cat').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteCategory(cat);
+        });
+        categoryList.appendChild(li);
       });
-      li.querySelector('.del-cat').addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteCategory(cat);
-      });
-      categoryList.appendChild(li);
-    });
+    }
 
     // Update dropdown di modal
     const modalCatSelect = document.getElementById('itemCategory');
-    modalCatSelect.innerHTML = '';
-    cats.forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      modalCatSelect.appendChild(opt);
-    });
+    if (modalCatSelect) {
+      modalCatSelect.innerHTML = '';
+      cats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        modalCatSelect.appendChild(opt);
+      });
+    }
   }
 
   function applyFilters() {
@@ -106,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentFilter.minPrice = priceMin.value;
     currentFilter.maxPrice = priceMax.value;
     currentFilter.eceranOnly = eceranOnly.checked;
-    currentFilter.search = searchInput.value.toLowerCase();
+    currentFilter.search = searchInput.value.trim().toLowerCase();
     renderItems();
   }
 
@@ -120,26 +134,36 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     });
 
-    itemsContainer.innerHTML = '';
-    if (filtered.length === 0) {
-      itemsContainer.innerHTML = '<p>Tidak ada barang ditemukan.</p>';
-      return;
+    if (itemsContainer) {
+      itemsContainer.innerHTML = '';
+      if (filtered.length === 0) {
+        itemsContainer.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding: 40px; color: var(--text-secondary);">Tidak ada barang ditemukan.</p>';
+        if (itemCountSpan) itemCountSpan.textContent = '';
+      } else {
+        if (itemCountSpan) itemCountSpan.textContent = `Menampilkan ${filtered.length} barang`;
+        filtered.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'item-card';
+          card.innerHTML = `
+            <h3>${escapeHTML(item.name)}</h3>
+            <span class="category-tag">${escapeHTML(item.category)}</span>
+            <div class="price">
+              Rp ${item.price.toLocaleString('id-ID')}
+              ${item.isEceran ? `<br><span class="eceran">Eceran: Rp ${item.eceranPrice.toLocaleString('id-ID')}</span>` : ''}
+            </div>
+            <button class="btn-small edit-item" data-id="${item.id}">Edit</button>
+          `;
+          card.querySelector('.edit-item').addEventListener('click', () => openEditModal(item.id));
+          itemsContainer.appendChild(card);
+        });
+      }
     }
-    filtered.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'item-card';
-      card.innerHTML = `
-        <h3>${item.name}</h3>
-        <span class="category-tag">${item.category}</span>
-        <div class="price">
-          Rp ${item.price.toLocaleString()}
-          ${item.isEceran ? `<br><span class="eceran">Eceran: Rp ${item.eceranPrice.toLocaleString()}</span>` : ''}
-        </div>
-        <button class="btn-small edit-item" data-id="${item.id}">Edit</button>
-      `;
-      card.querySelector('.edit-item').addEventListener('click', () => openEditModal(item.id));
-      itemsContainer.appendChild(card);
-    });
+  }
+
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   // === Category management ===
@@ -149,8 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert(`Kategori "${category}" masih memiliki ${itemsInCat} barang. Pindahkan atau hapus barang terlebih dahulu.`);
       return;
     }
-    // Tidak perlu hapus karena kategori diambil dari items, tapi jika tidak ada barang, kategori otomatis hilang
-    // Kita cukup trigger render
+    // Hapus dari dropdown modal jika ada (tidak perlu aksi khusus)
     renderCategories();
   }
 
@@ -161,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     itemId.value = '';
     deleteItemBtn.style.display = 'none';
     eceranPriceGroup.style.display = 'none';
+    itemIsEceran.checked = false;
     itemModal.style.display = 'flex';
   }
 
@@ -183,11 +207,15 @@ document.addEventListener('DOMContentLoaded', () => {
     itemModal.style.display = 'none';
   }
 
+  // Event checkbox eceran di modal
   itemIsEceran.addEventListener('change', () => {
     eceranPriceGroup.style.display = itemIsEceran.checked ? 'block' : 'none';
   });
 
-  closeModalBtn.addEventListener('click', closeModal);
+  // Close modal
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeModal);
+  }
   window.addEventListener('click', (e) => {
     if (e.target === itemModal) closeModal();
   });
@@ -195,23 +223,41 @@ document.addEventListener('DOMContentLoaded', () => {
   // Form submit
   itemForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const id = itemId.value ? parseInt(itemId.value) : generateId();
     const name = itemName.value.trim();
     const category = itemCategory.value;
-    const price = parseInt(itemPrice.value);
+    const priceStr = itemPrice.value.trim();
+    const price = parseInt(priceStr);
     const isEceran = itemIsEceran.checked;
-    const eceranPrice = isEceran ? parseInt(itemEceranPrice.value) || 0 : 0;
+    const eceranPrice = isEceran ? parseInt(itemEceranPrice.value.trim()) || 0 : 0;
 
-    if (!name || !category || isNaN(price)) return;
+    // Validasi
+    if (!name) {
+      alert('Nama barang wajib diisi.');
+      return;
+    }
+    if (!category) {
+      alert('Silakan pilih kategori. Jika belum ada, tambahkan kategori terlebih dahulu.');
+      return;
+    }
+    if (!priceStr || isNaN(price) || price < 0) {
+      alert('Harga harus diisi dengan angka yang valid (minimal 0).');
+      return;
+    }
+    if (isEceran && (isNaN(eceranPrice) || eceranPrice < 0)) {
+      alert('Harga eceran harus diisi dengan angka valid (minimal 0).');
+      return;
+    }
 
     if (itemId.value) {
-      // Edit
+      // Edit existing item
+      const id = parseInt(itemId.value);
       const idx = items.findIndex(i => i.id === id);
       if (idx !== -1) {
         items[idx] = { ...items[idx], name, category, price, isEceran, eceranPrice };
       }
     } else {
-      // Add
+      // Add new item
+      const id = generateId();
       items.push({ id, name, category, price, isEceran, eceranPrice });
     }
     saveData();
@@ -220,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModal();
   });
 
+  // Hapus barang dari modal
   deleteItemBtn.addEventListener('click', () => {
     if (!confirm('Hapus barang ini?')) return;
     const id = parseInt(itemId.value);
@@ -233,18 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // === Add category button ===
   addCategoryBtn.addEventListener('click', () => {
     const newCat = newCategoryInput.value.trim();
-    if (!newCat) return;
+    if (!newCat) {
+      alert('Nama kategori tidak boleh kosong.');
+      return;
+    }
     if (getCategories().includes(newCat)) {
       alert('Kategori sudah ada!');
       return;
     }
-    // Kategori akan muncul ketika ada barang dengan kategori itu. Kita buat barang dummy? Tidak perlu.
-    // Kita bisa langsung menambahkannya ke list, tapi harus ada barang. Biasanya user akan membuat barang.
-    // Jadi beri tahu bahwa kategori akan tersedia setelah menambah barang.
-    alert(`Kategori "${newCat}" akan muncul saat Anda menambahkan barang dengan kategori tersebut.`);
+    alert(`Kategori "${newCat}" siap digunakan. Silakan tambahkan barang dengan kategori ini melalui tombol "Tambah Barang".`);
     newCategoryInput.value = '';
-    // Tidak perlu menyimpan, karena kategori derived dari items.
-    // Tapi kita bisa langsung set di form modal? Lebih baik biarkan saja.
+    // Tidak perlu render karena kategori diambil dari items
   });
 
   // === Filter events ===
@@ -271,24 +317,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (theme === 'dark') {
       body.classList.remove('theme-light');
       body.classList.add('theme-dark');
-      lightScene.style.display = 'none';
-      darkScene.style.display = 'block';
+      if (lightScene) lightScene.style.display = 'none';
+      if (darkScene) darkScene.style.display = 'block';
     } else {
       body.classList.remove('theme-dark');
       body.classList.add('theme-light');
-      lightScene.style.display = 'block';
-      darkScene.style.display = 'none';
+      if (lightScene) lightScene.style.display = 'block';
+      if (darkScene) darkScene.style.display = 'none';
     }
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (e) {}
   }
 
-  themeToggle.addEventListener('click', () => {
-    const current = body.classList.contains('theme-dark') ? 'dark' : 'light';
-    setTheme(current === 'dark' ? 'light' : 'dark');
-  });
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const current = body.classList.contains('theme-dark') ? 'dark' : 'light';
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  }
 
   // Load tema tersimpan
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  const savedTheme = (() => { try { return localStorage.getItem('theme'); } catch(e) { return null; } })() || 'light';
   setTheme(savedTheme);
 
   // === Backup & Restore ===
@@ -314,11 +364,10 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        if (!Array.isArray(data)) throw new Error('Format salah');
-        // Validasi setiap item
-        data.forEach(item => {
+        if (!Array.isArray(data)) throw new Error('Format bukan array');
+        data.forEach((item, index) => {
           if (!item.id || !item.name || !item.category || typeof item.price !== 'number') {
-            throw new Error('Data tidak valid');
+            throw new Error(`Barang ke-${index+1} tidak valid`);
           }
         });
         items = data;
